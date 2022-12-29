@@ -42,6 +42,11 @@ app.put('/users/:id', async (req, res) => {
 // ORDERS
 app.get('/orders', async (req, res) => {
   const orders = await prisma.order.findMany({
+    where: {
+      updatedAt: {
+        gte: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      },
+    },
     include: {
       user: true,
       product: true,
@@ -68,13 +73,16 @@ app.post('/orders', async (req, res) => {
 // update order status  (PENDING, DELIVERED, CANCELLED)
 app.put('/orders/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, productId, quantity } = req.body;
   const order = await prisma.order.update({
     where: { id: Number(id) },
     data: {
-      status,
+      status: status || undefined,
+      productId: productId ? Number(productId) : undefined,
+      quantity: quantity ? Number(quantity) : undefined,
     },
   });
+
   res.json(order);
 });
 
